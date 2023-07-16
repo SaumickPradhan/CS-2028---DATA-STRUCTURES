@@ -1,126 +1,90 @@
-
 class Player(object):
-  def __init__(self, name, place):
-    """Create a player object."""
-    self.name = name
-    self.place = place
-    self.backpack = []
+    def __init__(self, name, place):
+        """Create a player object."""
+        self.name = name
+        self.place = place
+        self.backpack = []
+    
+    def look(self):
+        self.place.look()
+        print('Characters in this place:')
+        for character in self.place.characters.values():
+            print('   ', character.name, '-', character.description)
+            if character.belongs:
+                print('      Belongs:', ', '.join(character.belongs))
 
-  def look(self):
-    self.place.look()
+    def talk_to(self, person):
+        """Talk to person if person is at player's current place and receive any belongings."""
+        if type(person) != str:
+            print('Person has to be a string.')
+        else:
+            character = self.place.characters.get(person)
+            if character:
+                print(character.name + ' says: ' + character.talk())
+                if character.belongs:
+                    print(character.name + ' gives you:', ', '.join(character.belongs))
+                    for item_name in character.belongs:
+                        item = self.place.take(item_name)
+                        self.backpack.append(item)
+            else:
+                print(person + ' is not here.')
 
-  def go_to(self, direction):
-    """Go to direction if it's among the exits of player's current place.
-    >>> swift= Place('Swift Hall', 'You are at Swift Hall', [], [])
-    >>> bcc = Place('Bearcat Cafe', 'You are at Bearcat Cafe', [], [])
-    >>> swift.add_exits([bcc])
-    >>> bcc.add_exits([swift])
-    >>> me = Player('player', swift)
-    >>> me.go_to('Bearcat Cafe')
-    You are at Bearcat Cafe
-    >>> me.place.name
-    'Bearcat Cafe'
-    >>> me.go_to('Bearcat Cafe')
-    Can't go to Bearcat Cafe from Bearcat Cafe.
-    Try looking around to see where to go.
-    >>> me.go_to('Swift Hall')
-    You are at Swift Hall
-    """
-    self.place = self.place.exit_to(direction) #using exit_to from Class Place 
+    def give(self, item_name, person):
+        """Give an item to a character if the character is at player's current place."""
+        if type(person) != str:
+            print('Person has to be a string.')
+        elif type(item_name) != str:
+            print('Item name has to be a string.')
+        else:
+            character = self.place.characters.get(person)
+            if character:
+                for item in self.backpack:
+                    if item.name == item_name:
+                        self.backpack.remove(item)
+                        character.belongs.append(item_name)
+                        print('You give ' + item_name + ' to ' + person + '.')
+                        return
+                print('You don\'t have ' + item_name + ' in your backpack.')
+            else:
+                print(person + ' is not here.')
+
+    def use(self, item_name):
+        """Use an item from the player's backpack."""
+        if type(item_name) != str:
+            print('Item name has to be a string.')
+        else:
+            for item in self.backpack:
+                if item.name == item_name:
+                    print('You use ' + item_name + '.')
+                    # Implement the specific action for each item here, if necessary.
+                    return
+            print('You don\'t have ' + item_name + ' in your backpack.')
 
 
-  def talk_to(self, person):
-    """Talk to person if person is at player's current place.
-    >>> robert = Character('Robert', 'Have to run for lecture!')
-    >>> sather_gate = Place('Sather Gate', 'You are at Sather Gate', [robert], [])
-    >>> me = Player('player', sather_gate)
-    >>> me.talk_to(robert)
-    Person has to be a string.
-    >>> me.talk_to('Robert')
-    Robert says: Have to run for lecture!
-    >>> me.talk_to('Albert')
-    Albert is not here.
-    """
-    if type(person) != str:
-      print('Person has to be a string.')
-    else: print (person + ' says: ' + self.place.characters[person].talk()) if person in self.place.characters else print(person + ' is not here.')  # Ternary operation for If else used here
 
-  def take(self, thing):
-    """Take a thing if thing is at player's current place
-    >>> hotdog = Thing('Hotdog', 'A hot looking hotdog')
-    >>> bcc = Place('BCC', 'You are at Bearcat Cafe', [], [hotdog])
-    >>> me = Player('Player', bcc)
-    >>> me.backpack
-    []
-    >>> me.take(hotdog)
-    Thing should be a string.
-    >>> me.take('dog')
-    dog is not here.
-    >>> me.take('Hotdog')
-    Player takes the Hotdog
-    >>> me.take('Hotdog')
-    Hotdog is not here.
-    >>> type(me.backpack[0])
-    <class 'Thing'>
-    """
-    if type(thing) != str:
-      print('Thing should be a string.')
-    else:
-      if thing not in self.place.things:
-        print(thing + ' is not here.')
-      else:
-        thing_token = self.place.take(thing)
-        self.backpack.append(thing_token)
-        print(self.name + ' takes the ' + thing_token.name)
-
-  def check_backpack(self):
-    """Print each item with its description and return a list of item names.
-    >>> cookie = Thing('Cookie', 'A huge cookie')
-    >>> donut = Thing('Donut', 'A huge donut')
-    >>> cupcake = Thing('Cupcake', 'A huge cupcake')
-    >>> bcc = Place('BCC', 'You are at Bearcat Cafe', [], [cookie, donut, cupcake])
-    >>> me = Player('Player', bcc)
-    >>> me.check_backpack()
-    In your backpack:
-        there is nothing.
-    []
-    >>> me.take('Cookie')
-    Player takes the Cookie
-    >>> me.check_backpack()
-    In your backpack:
-        Cookie - A huge cookie
-    ['Cookie']
-    >>> me.take('Donut')
-    Player takes the Donut
-    >>> food = me.check_backpack()
-    In your backpack:
-        Cookie - A huge cookie
-        Donut - A huge donut
-    >>> food
-    ['Cookie', 'Donut']
-    """
-    print('In your backpack:')
-    if not self.backpack:
-      print('    there is nothing.')
-    else:
-      for item in self.backpack:
-        print('   ', item.name, '-', item.description)
-    return [item.name for item in self.backpack]
+    def check_backpack(self):
+        print('In your backpack:')
+        if not self.backpack:
+            print('    there is nothing.')
+        else:
+            for item in self.backpack:
+                print('   ', item.name, '-', item.description)
+        return [item.name for item in self.backpack]
 
 
 class Character(object):
-  def __init__(self, name, message):
-    self.name = name
-    self.message = message
+    def __init__(self, name, description):
+        self.name = name
+        self.description = description
+        self.belongs = []  # A list of items the character has and can give to the player
 
-  def talk(self):
-    return self.message
-
+    def talk(self):
+        return self.description
 
 class Thing(object):
-  def __init__(self, name, description):
-    self.name = name
-    self.description = description
+    def __init__(self, name, description):
+        self.name = name
+        self.description = description
 
 
 class Place(object):
@@ -251,9 +215,6 @@ def adv_parse(line):
     else:
         return (command, ' '.join(tokens))
 
-##############
-# Evaluation #
-##############
 
 def adv_eval(exp):
     operator, operand = exp[0], exp[1]
@@ -287,9 +248,6 @@ def check_win_state(player):
         return False
     return True
 
-########
-# REPL #
-########
 
 def read_eval_print_loop():
     print(WELCOME_MESSAGE)
@@ -314,9 +272,6 @@ def read_eval_print_loop():
         except SyntaxError as e:
             print('ERROR:', e)
 
-#################
-# Configuration #
-#################
 
 COMMAND_FORMATS = {
     'look': 'look',
